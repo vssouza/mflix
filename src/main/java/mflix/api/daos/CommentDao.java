@@ -5,10 +5,7 @@ import com.mongodb.MongoWriteException;
 import com.mongodb.ReadConcern;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
-import com.mongodb.client.model.Aggregates;
-import com.mongodb.client.model.Filters;
-import com.mongodb.client.model.Sorts;
-import com.mongodb.client.model.Updates;
+import com.mongodb.client.model.*;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 import mflix.api.models.Comment;
@@ -82,9 +79,13 @@ public class CommentDao extends AbstractMFlixDao {
 
     // TODO> Ticket - Update User reviews: implement the functionality that enables adding a new
     // comment.
+    if(comment.getId() == null || comment.getId().isEmpty()) {
+      throw new IncorrectDaoOperation("Comment id cannot be set to null");
+    }
+    commentCollection.insertOne(comment);
     // TODO> Ticket - Handling Errors: Implement a try catch block to
     // handle a potential write exception when given a wrong commentId.
-    return null;
+    return comment;
   }
 
   /**
@@ -104,6 +105,24 @@ public class CommentDao extends AbstractMFlixDao {
 
     // TODO> Ticket - Update User reviews: implement the functionality that enables updating an
     // user own comments
+    if(email == null || commentId == null || email.isEmpty() || commentId.isEmpty()) {
+      throw new IncorrectDaoOperation("Email and comment id cannot be null or empty. ObjectId must be valid.");
+    }
+
+    UpdateResult result = commentCollection.updateOne(
+            Filters.and(
+                    Filters.eq("_id", new ObjectId(commentId)),
+                    Filters.eq("email", email)
+            ),
+            Updates.combine(
+                    Updates.set("text", text),
+                    Updates.set("date", new Date())
+            )
+    );
+
+    if(result.getMatchedCount() > 0) {
+      return true;
+    }
     // TODO> Ticket - Handling Errors: Implement a try catch block to
     // handle a potential write exception when given a wrong commentId.
     return false;
