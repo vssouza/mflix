@@ -69,7 +69,7 @@ public class DeleteCommentTest extends TicketTest {
     String nonExistingCommentId = new ObjectId().toHexString();
     Assert.assertFalse(
         "Deleting non-existing comment should return " + "false: Check your deleteComment() method",
-        dao.deleteComment(nonExistingCommentId, ""));
+        dao.deleteComment(nonExistingCommentId, ownerEmail));
   }
 
   @Test
