@@ -23,6 +23,7 @@ import org.springframework.stereotype.Component;
 
 import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
@@ -173,6 +174,11 @@ public class CommentDao extends AbstractMFlixDao {
         // // guarantee for the returned documents. Once a commenter is in the
         // // top 20 of users, they become a Critic, so mostActive is composed of
         // // Critic objects.
+        List<Bson> pipeline = Arrays.asList(
+                Aggregates.group("$email", Accumulators.sum("count", 1L)),
+                Aggregates.sort(Sorts.descending("count")),
+                Aggregates.limit(20));
+        commentCollection.withReadConcern(ReadConcern.MAJORITY).aggregate(pipeline, Critic.class).iterator().forEachRemaining(mostActive::add);
         return mostActive;
     }
 }
