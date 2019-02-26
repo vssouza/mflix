@@ -73,8 +73,10 @@ public class MovieDao extends AbstractMFlixDao {
                         .append("let",
                                 new Document("id", "$_id"))
                         .append("pipeline", Arrays.asList(new Document("$match",
-                                new Document("$expr",
-                                        new Document("$eq", Arrays.asList("$movie_id", "$$id"))))))
+                                        new Document("$expr",
+                                                new Document("$eq", Arrays.asList("$movie_id", "$$id")))),
+                                new Document("$sort",
+                                        new Document("date", -1L))))
                         .append("as", "comments"))));
         Document movie = moviesCollection.aggregate(pipeline).first();
 
