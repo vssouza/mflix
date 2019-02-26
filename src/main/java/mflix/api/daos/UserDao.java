@@ -5,10 +5,7 @@ import com.mongodb.MongoWriteException;
 import com.mongodb.WriteConcern;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
-import com.mongodb.client.model.Filters;
-import com.mongodb.client.model.InsertOneOptions;
-import com.mongodb.client.model.UpdateOptions;
-import com.mongodb.client.model.Updates;
+import com.mongodb.client.model.*;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 import mflix.api.models.Session;
@@ -63,7 +60,7 @@ public class UserDao extends AbstractMFlixDao {
      */
     public boolean addUser(User user) {
         //TODO > Ticket: Durable Writes -  you might want to use a more durable write concern here!
-        usersCollection.withWriteConcern(WriteConcern.W2).insertOne(user);
+        usersCollection.withWriteConcern(WriteConcern.ACKNOWLEDGED.withW(2)).insertOne(user);
         return true;
         //TODO > Ticket: Handling Errors - make sure to only add new users
         // and not users that already exist.
@@ -81,7 +78,9 @@ public class UserDao extends AbstractMFlixDao {
         //TODO> Ticket: User Management - implement the method that allows session information to be
         // stored in it's designated collection.
         Session session = new Session(userId, jwt);
-        sessionsCollection.insertOne(session);
+        ReplaceOptions replaceOptions = new ReplaceOptions();
+        replaceOptions.upsert(true);
+        sessionsCollection.replaceOne(Filters.eq("user_id", userId), session, replaceOptions);
         return true;
         //TODO > Ticket: Handling Errors - implement a safeguard against
         // creating a session with the same jwt token.
@@ -142,11 +141,15 @@ public class UserDao extends AbstractMFlixDao {
      *                        ones. Cannot be set to null value
      * @return User object that just been updated.
      */
-    public boolean updateUserPreferences(String email, Map<String, ?> userPreferences) {
+    public boolean updateUserPreferences(String email, Map<String, String> userPreferences) {
         //TODO> Ticket: User Preferences - implement the method that allows for user preferences to
         // be updated.
+        if(userPreferences == null) {
+            throw new IncorrectDaoOperation("User preferences cannot be updated to null.");
+        }
+        usersCollection.updateOne(Filters.eq("email", email), Updates.set("preferences", userPreferences));
         //TODO > Ticket: Handling Errors - make this method more robust by
         // handling potential exceptions when updating an entry.
-        return false;
+        return true;
     }
 }
