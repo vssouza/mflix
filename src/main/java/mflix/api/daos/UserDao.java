@@ -59,8 +59,12 @@ public class UserDao extends AbstractMFlixDao {
      * @return True if successful, throw IncorrectDaoOperation otherwise
      */
     public boolean addUser(User user) {
-        //TODO > Ticket: Durable Writes -  you might want to use a more durable write concern here!
-        usersCollection.withWriteConcern(WriteConcern.ACKNOWLEDGED.withW(2)).insertOne(user);
+        try {
+            //TODO > Ticket: Durable Writes -  you might want to use a more durable write concern here!
+            usersCollection.withWriteConcern(WriteConcern.ACKNOWLEDGED.withW(2)).insertOne(user);
+        } catch (MongoWriteException ex) {
+            throw new IncorrectDaoOperation("There was a problem adding the user. Please check if the user already exists.");
+        }
         return true;
         //TODO > Ticket: Handling Errors - make sure to only add new users
         // and not users that already exist.
