@@ -37,7 +37,6 @@ public class TimeoutsTest extends TicketTest {
   public void setUp() throws IOException {
     this.movieDao = new MovieDao(mongoClient, databaseName);
     mongoUri = getProperty("spring.mongodb.uri");
-    mongoClient = MongoClients.create(mongoUri);
   }
 
   @Test
